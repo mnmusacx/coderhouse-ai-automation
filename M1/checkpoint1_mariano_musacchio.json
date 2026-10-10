@@ -1,0 +1,314 @@
+{
+  "name": "M1 - Agente Triaje Compras",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -768,
+        -96
+      ],
+      "id": "dc28c7f0-3cf7-4193-8bb9-09c2aaa585c9",
+      "name": "When chat message received",
+      "webhookId": "0f5e028f-e1b1-4847-bbf1-ded08b6c7748"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "# ROL\nSos el Asistente de Triaje de Solicitudes de Compra del área de Abastecimiento de una operadora de petróleo y gas. Recibís pedidos internos escritos en lenguaje libre por personal de campo y de oficina, los convertís en una solicitud estructurada y la registrás para que un comprador la gestione.\n\n# ÁMBITO\n- Operás únicamente sobre solicitudes de compra de bienes (materiales, repuestos, consumibles, equipos) y de servicios.\n- No tenés acceso a precios, proveedores, stock, presupuestos ni al sistema ERP.\n- Cualquier consulta ajena a registrar una solicitud de compra está fuera de tu ámbito.\n\n# OBJETIVO\nPor cada mensaje:\n1. Extraer: área solicitante, tipo (Bien o Servicio), descripción, cantidad, unidad, destino, prioridad y justificación.\n2. Normalizar la descripción en términos técnicos claros, sin inventar especificaciones que el usuario no dio.\n3. Decidir si la solicitud está completa según las reglas.\n4. Si está completa: registrarla con la herramienta \"Registrar_Solicitud_Compra\" y confirmar al usuario.\n5. Si no está completa: NO registrar y responder indicando exactamente qué datos faltan.\n\n# REGLAS\nCompletitud (todas obligatorias para registrar):\n- Descripción del bien o servicio.\n- Cantidad numérica y unidad.\n- Área solicitante.\n\nPrioridad:\n- Si el usuario no menciona urgencia, asignar \"Normal\" y aclararlo en Observaciones_Agente.\n- Valores permitidos: Normal, Urgente, Crítica. \"Crítica\" se reserva para casos en que la falta del bien o servicio detiene o pone en riesgo la operación.\n- Si la prioridad es Urgente o Crítica y no hay justificación, la solicitud está incompleta: pedir la justificación.\n\nCriterio:\n- No supongas datos que el usuario no informó. Si interpretás algo (por ejemplo, una unidad implícita), dejalo asentado en Observaciones_Agente.\n- Registrá una sola vez por solicitud. Si el mensaje contiene varios ítems distintos, registrá una fila por ítem.\n\nProhibiciones:\n- No cotizar ni estimar precios.\n- No recomendar ni mencionar proveedores.\n- No aprobar montos ni comprometer fechas de entrega.\n- No registrar solicitudes incompletas ni fuera de ámbito.\n\nEscalamiento:\n- Si el pedido involucra seguridad de personas, medio ambiente o una emergencia operativa, indicar al usuario que además lo comunique de inmediato a su supervisor y al comprador de guardia, y registrar la solicitud como \"Crítica\" si está completa.\n- Si la consulta está fuera de ámbito, responder en una oración que no corresponde a este asistente y que debe dirigirse al área de Abastecimiento.\n\n# FORMATO DE RESPUESTA\nRespuestas breves y profesionales, en español rioplatense y sin lenguaje inclusivo.\n- Registrada: \"Solicitud registrada\" + resumen en una línea (descripción, cantidad, unidad, prioridad).\n- Incompleta: \"No se registró la solicitud. Faltan: ...\" con la lista de datos faltantes.\n- Fuera de ámbito: una oración de derivación.\n- Usar exactamente las frases de inicio indicadas. Texto plano, sin markdown ni negritas.",
+          "maxIterations": 6,
+          "returnIntermediateSteps": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -560,
+        -96
+      ],
+      "id": "5440c45f-653e-495c-bbe0-01e7020a2c3f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        -592,
+        80
+      ],
+      "id": "a8325ef8-abbe-430c-a160-bf48136c4b33",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "DoATUFzEmsdT0Rl8",
+          "name": "Anthropic - API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Registra una solicitud de compra interna en la planilla oficial de solicitudes de Abastecimiento. Cada ejecución agrega UNA fila que corresponde a UN ítem.\n\nUsar SOLO cuando se cumplen todas estas condiciones:\n- El mensaje del usuario es un pedido de compra de un bien o servicio.\n- Están identificados la descripción, la cantidad numérica, la unidad y el área solicitante.\n- Si la prioridad es Urgente o Crítica, existe una justificación explícita.\n\nNO usar cuando:\n- Falta cualquiera de los datos obligatorios (en ese caso, pedir los datos faltantes al usuario).\n- El usuario consulta precios, proveedores, stock, plazos, estado de un pedido anterior o cualquier tema que no sea registrar una nueva solicitud.\n- La solicitud ya fue registrada en esta misma conversación.\n\nSi el mensaje contiene varios ítems distintos, ejecutar la herramienta una vez por ítem.",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1AfRbgAp28b9_VQ4VRsf8wg5NBqlPZC04ze086iuIfp0",
+          "mode": "list",
+          "cachedResultName": "Solicitudes de Compra",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AfRbgAp28b9_VQ4VRsf8wg5NBqlPZC04ze086iuIfp0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Solicitudes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AfRbgAp28b9_VQ4VRsf8wg5NBqlPZC04ze086iuIfp0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Fecha_Registro": "={{ $now.toFormat('yyyy-MM-dd HH:mm') }}",
+            "Session_ID": "={{ $('When chat message received').item.json.sessionId }}",
+            "Area_Solicitante": "={{ $fromAI('Area_Solicitante', 'Área interna que solicita, por ejemplo Perforación o Mantenimiento', 'string') }}",
+            "Tipo": "={{ $fromAI('Tipo', 'Bien o Servicio', 'string') }}",
+            "Descripcion": "={{ $fromAI('Descripcion', 'Descripción técnica normalizada del ítem, sin inventar especificaciones', 'string') }}",
+            "Cantidad": "={{ $fromAI('Cantidad', 'Cantidad numérica solicitada', 'number') }}",
+            "Unidad": "={{ $fromAI('Unidad', 'Unidad de medida: un, m, kg, l, rollo, etc.', 'string') }}",
+            "Destino": "={{ $fromAI('Destino', 'Yacimiento, pozo o base de destino; vacío si no se informó', 'string') }}",
+            "Prioridad": "={{ $fromAI('Prioridad', 'Normal, Urgente o Crítica', 'string') }}",
+            "Justificacion": "={{ $fromAI('Justificacion', 'Motivo del pedido; obligatorio si la prioridad no es Normal', 'string') }}",
+            "Estado": "Pendiente revisión",
+            "Observaciones_Agente": "={{ $fromAI('Observaciones_Agente', 'Supuestos realizados o dudas para el comprador; vacío si no hay', 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Fecha_Registro",
+              "displayName": "Fecha_Registro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Session_ID",
+              "displayName": "Session_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Area_Solicitante",
+              "displayName": "Area_Solicitante",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tipo",
+              "displayName": "Tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Descripcion",
+              "displayName": "Descripcion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cantidad",
+              "displayName": "Cantidad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Unidad",
+              "displayName": "Unidad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Destino",
+              "displayName": "Destino",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Prioridad",
+              "displayName": "Prioridad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Justificacion",
+              "displayName": "Justificacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Observaciones_Agente",
+              "displayName": "Observaciones_Agente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -352,
+        64
+      ],
+      "id": "dc90ef02-2600-46f5-a672-837a18e145e0",
+      "name": "Registrar_Solicitud_Compra",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "zieuKYjWGivDzpKY",
+          "name": "Sheets - mnmusac.dev"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "mnmusac.dev@gmail.com",
+        "subject": "=[Agente Compras] Log de ejecución - {{ $now.toFormat('dd/MM HH:mm') }}",
+        "emailType": "text",
+        "message": "=  PEDIDO RECIBIDO:\n  {{ $('When chat message received').item.json.chatInput }}\n\n  RESPUESTA DEL AGENTE:\n  {{ $json.output }}\n\n  HERRAMIENTAS EJECUTADAS: {{ $json.intermediateSteps ? $json.intermediateSteps.length : 0 }}\n\n  PASOS INTERMEDIOS (Execution Log):\n  {{ JSON.stringify($json.intermediateSteps, null, 2) }}\n\n  Session_ID: {{ $('When chat message received').item.json.sessionId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        -96
+      ],
+      "id": "4c761262-0703-4e4f-8d6d-0e5bb3b4f094",
+      "name": "Log_Observabilidad",
+      "webhookId": "c86feba0-5262-4112-ac4b-550133fdf2fc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1xkj9u6IbHFaEp51",
+          "name": "Gmail - mnmusac.dev"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar_Solicitud_Compra": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Log_Observabilidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9b53fb16-6d1b-445c-9a03-1765eb564023",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0387acc8556b40607f3b6faf90331dd1bd16e352f54b60625b214e4956684997"
+  },
+  "nodeGroups": [],
+  "id": "cbhXJX6vhK6qZhZv",
+  "tags": []
+}
