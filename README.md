@@ -1,4 +1,3 @@
-# coderhouse-ai-automation
 # Agente de Triaje de Solicitudes de Compra
 
 Proyecto integrador del trayecto AI Automation (Coderhouse). Un agente en n8n que recibe pedidos de compra internos escritos en lenguaje libre, los estructura, decide si están completos y los registra para su gestión por el área de Abastecimiento de una operadora de petróleo y gas.
