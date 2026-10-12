@@ -1,0 +1,244 @@
+{
+  "name": "W1 - Extraccion y Validacion",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "mensaje"
+            },
+            {
+              "name": "session_id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e9252faa-bd92-4d5c-a6bd-3f7070301bf0",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.mensaje }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"area_solicitante\": { \"type\": \"string\", \"description\": \"Área interna que solicita (ej. Perforación, Mantenimiento). Cadena vacía si no se informa.\" },\n    \"tipo\": { \"type\": \"string\", \"description\": \"Bien o Servicio. Cadena vacía si no se puede determinar.\" },\n    \"descripcion\": { \"type\": \"string\", \"description\": \"Descripción técnica normalizada del ítem, sin inventar especificaciones. Cadena vacía si no se informa.\" },\n    \"cantidad\": { \"type\": \"number\", \"description\": \"Cantidad numérica solicitada. 0 si no se informa.\" },\n    \"unidad\": { \"type\": \"string\", \"description\": \"Unidad de medida (un, m, kg, l, rollo, par, etc.). Cadena vacía si no se informa ni es inferible sin ambigüedad.\" },\n    \"destino\": { \"type\": \"string\", \"description\": \"Yacimiento, pozo o base de destino. Cadena vacía si no se informa.\" },\n    \"prioridad\": { \"type\": \"string\", \"description\": \"Normal, Urgente o Crítica. Normal si el usuario no menciona urgencia.\" },\n    \"justificacion\": { \"type\": \"string\", \"description\": \"Motivo explícito del pedido o de la urgencia, tal como lo expresa el usuario. Cadena vacía si no se informa.\" },\n    \"observaciones\": { \"type\": \"string\", \"description\": \"Supuestos o interpretaciones realizadas al extraer. Cadena vacía si no hubo.\" },\n    \"nombre_solicitante\": { \"type\": \"string\", \"description\": \"Nombre de pila de la persona que escribe, solo si se presenta (ej. 'soy Juan'). Cadena vacía si no lo dice.\" }\n  },\n  \"required\": [\"area_solicitante\", \"tipo\", \"descripcion\", \"cantidad\", \"unidad\", \"destino\", \"prioridad\", \"justificacion\", \"observaciones\", \"nombre_solicitante\"]\n}",
+        "options": {
+          "systemPromptTemplate": "Sos un extractor de datos de solicitudes de compra internas de una operadora de petróleo y gas. Tu única tarea es leer el mensaje y completar los campos del esquema.\n\nReglas:\n- Extraé solo lo que el usuario informó. No inventes especificaciones, cantidades, áreas ni destinos.\n- Si un dato no está en el mensaje, devolvé cadena vacía (o 0 para la cantidad).\n- Si el usuario no menciona urgencia, la prioridad es \"Normal\" y lo dejás asentado en observaciones.\n- \"Crítica\" solo si el mensaje indica que la falta del bien o servicio detiene o pone en riesgo la operación, la seguridad o el medio ambiente.\n- Una justificación es un motivo explícito. \"Es urgente\" no es una justificación.\n- Si interpretás algo (por ejemplo, una unidad implícita), dejalo asentado en observaciones.\n- Si la persona se presenta con su nombre, extraelo en nombre_solicitante. No lo confundas con nombres de proveedores, marcas, pozos ni de otras personas mencionadas.\n- No evalúes si la solicitud está completa: eso lo decide otro paso del proceso."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "c4b9c305-22b4-4d96-91b1-57d0f642f9f6",
+      "name": "Information Extractor",
+      "notesInFlow": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-6",
+          "cachedResultName": "Claude Sonnet 4.6"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        208,
+        192
+      ],
+      "id": "72c9be47-f63c-46d1-a88c-d08191b4d7d6",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "DoATUFzEmsdT0Rl8",
+          "name": "Anthropic - API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7ecdfea1-0faf-478c-8871-dd481d3debec",
+              "name": "faltantes",
+              "value": "={{ (() => { const s = $json.output; const f = []; if (!s.descripcion) f.push('descripcion'); if (typeof s.cantidad !== 'number' || s.cantidad <= 0) f.push('cantidad'); if (!s.unidad) f.push('unidad'); if (!s.area_solicitante) f.push('area_solicitante'); if (s.prioridad !== 'Normal' && !s.justificacion) f.push('justificacion'); return f; })() }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        576,
+        -16
+      ],
+      "id": "6c48de3f-9586-48e0-8715-5eca4411e3b9",
+      "name": "Calcular_Faltantes"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9158b716-6607-44b8-a74a-0ab1bf82f72a",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "7811d434-031e-44e8-ad5c-1d3d82cb695d",
+              "name": "worker",
+              "value": "W1_extraccion",
+              "type": "string"
+            },
+            {
+              "id": "4461e881-6473-4a2d-8395-2ab767948cee",
+              "name": "data",
+              "value": "={{ { completa: $json.faltantes.length === 0, faltantes: $json.faltantes, solicitud: $json.output } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        784,
+        -16
+      ],
+      "id": "bb9236af-3471-4cfb-8684-c74fa82d78e6",
+      "name": "Contrato_Salida"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "310581e4-b65c-4ec2-8d5e-ae8aaa8d72b5",
+              "name": "status",
+              "value": "error",
+              "type": "string"
+            },
+            {
+              "id": "fa1942cc-8abc-49c5-b72c-d823d6bc318a",
+              "name": "worker",
+              "value": "W1_extraccion",
+              "type": "string"
+            },
+            {
+              "id": "cade8a00-01a2-4f63-b92a-6a8eac773614",
+              "name": "error",
+              "value": "={{ typeof $json.error === 'string' ? $json.error : ($json.error?.message || 'Error desconocido en W1') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        576,
+        176
+      ],
+      "id": "adb3a1b0-20a4-4379-a60b-809d78c15965",
+      "name": "Contrato_Error"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Calcular_Faltantes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Contrato_Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular_Faltantes": {
+      "main": [
+        [
+          {
+            "node": "Contrato_Salida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contrato_Salida": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 30
+  },
+  "versionId": "042c7639-d898-4acf-b899-f2658db5a982",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0387acc8556b40607f3b6faf90331dd1bd16e352f54b60625b214e4956684997"
+  },
+  "nodeGroups": [],
+  "id": "gDD2qMJiHUCGHAmM",
+  "tags": []
+}

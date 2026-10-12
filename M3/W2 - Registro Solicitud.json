@@ -1,0 +1,338 @@
+{
+  "name": "W2 - Registro Solicitud",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "session_id"
+            },
+            {
+              "name": "area_solicitante"
+            },
+            {
+              "name": "tipo"
+            },
+            {
+              "name": "descripcion"
+            },
+            {
+              "name": "cantidad",
+              "type": "number"
+            },
+            {
+              "name": "unidad"
+            },
+            {
+              "name": "destino"
+            },
+            {
+              "name": "prioridad"
+            },
+            {
+              "name": "justificacion"
+            },
+            {
+              "name": "observaciones"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "172b6296-8f51-4197-91c6-009f05ec8f48",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1AfRbgAp28b9_VQ4VRsf8wg5NBqlPZC04ze086iuIfp0",
+          "mode": "list",
+          "cachedResultName": "Solicitudes de Compra",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AfRbgAp28b9_VQ4VRsf8wg5NBqlPZC04ze086iuIfp0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Solicitudes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AfRbgAp28b9_VQ4VRsf8wg5NBqlPZC04ze086iuIfp0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Fecha_Registro": "={{ $now.toFormat('yyyy-MM-dd HH:mm') }}",
+            "Session_ID": "={{ $json.session_id }}",
+            "Area_Solicitante": "={{ $json.area_solicitante }}",
+            "Tipo": "={{ $json.tipo }}",
+            "Descripcion": "={{ $json.descripcion }}",
+            "Cantidad": "={{ $json.cantidad }}",
+            "Unidad": "={{ $json.unidad }}",
+            "Destino": "={{ $json.destino }}",
+            "Prioridad": "={{ $json.prioridad }}",
+            "Justificacion": "={{ $json.justificacion }}",
+            "Estado": "Pendiente revisión",
+            "Observaciones_Agente": "={{ $json.observaciones }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Fecha_Registro",
+              "displayName": "Fecha_Registro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Session_ID",
+              "displayName": "Session_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Area_Solicitante",
+              "displayName": "Area_Solicitante",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tipo",
+              "displayName": "Tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Descripcion",
+              "displayName": "Descripcion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cantidad",
+              "displayName": "Cantidad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Unidad",
+              "displayName": "Unidad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Destino",
+              "displayName": "Destino",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Prioridad",
+              "displayName": "Prioridad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Justificacion",
+              "displayName": "Justificacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Observaciones_Agente",
+              "displayName": "Observaciones_Agente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "fbf106fa-4fd5-4ba0-9df7-fdeac81e565d",
+      "name": "Registrar_en_Sheets",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "zieuKYjWGivDzpKY",
+          "name": "Sheets - mnmusac.dev"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c62ff7cc-85e3-475b-88f0-37ce8f60e55d",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "ac8c1f85-8388-41bb-93f7-10577b89ff67",
+              "name": "worker",
+              "value": "W2_registro",
+              "type": "string"
+            },
+            {
+              "id": "dec8654d-0994-46d3-9faa-6d6c7fd45d7b",
+              "name": "data",
+              "value": "={{ (() => { const t = $('When Executed by Another Workflow').item.json; return { registrada: true, mensaje_usuario: `Solicitud registrada: ${t.descripcion}, ${t.cantidad} ${t.unidad}, prioridad ${t.prioridad}.` }; })() }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        -16
+      ],
+      "id": "e10c875a-f30a-459b-b1be-249e8b768ca1",
+      "name": "Contrato_Salida"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bd9dcb0e-daf8-46db-807b-60efb2030d2a",
+              "name": "status",
+              "value": "error",
+              "type": "string"
+            },
+            {
+              "id": "b6c67ea6-542c-4fba-9065-3b23792a55cc",
+              "name": "worker",
+              "value": "W2_registro",
+              "type": "string"
+            },
+            {
+              "id": "202625ae-dae4-462c-ba62-fc96ecfa000f",
+              "name": "error",
+              "value": "={{ typeof $json.error === 'string' ? $json.error : ($json.error?.message || 'Error desconocido en W2') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        144
+      ],
+      "id": "7305a5b8-bfef-4dca-a1ed-2c662b6e5dc4",
+      "name": "Contrato_Error"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Registrar_en_Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar_en_Sheets": {
+      "main": [
+        [
+          {
+            "node": "Contrato_Salida",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Contrato_Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 30
+  },
+  "versionId": "8f70767f-97e2-43aa-9c2f-6f159341837b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0387acc8556b40607f3b6faf90331dd1bd16e352f54b60625b214e4956684997"
+  },
+  "nodeGroups": [],
+  "id": "qnyTJbTZADeB7tA0",
+  "tags": []
+}
